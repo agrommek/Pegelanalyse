@@ -6,7 +6,7 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 @pytest.fixture
 def real_csv():
-    return FIXTURES_DIR / "2026-2-15_11-22.txt"
+    return FIXTURES_DIR / "testdaten.csv"
 
 
 @pytest.fixture
