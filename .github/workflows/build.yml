@@ -1,8 +1,8 @@
 name: Build Standalone Executables
 
 # Triggers:
-#   - Every push to main (quick feedback during development)
-#   - Every version tag (v1.0, v1.2.3, …) → creates downloadable release artifacts
+#   - Every push to main (CI: verify the build still works)
+#   - Every version tag (v1.0, v1.2.3, …) → CI build + GitHub Release with binaries
 #   - Manual trigger via GitHub UI (Actions → Run workflow)
 on:
   push:
@@ -19,14 +19,17 @@ jobs:
           - os: ubuntu-latest
             artifact-name: pegelanalyse-linux
             exe-path: dist/pegelanalyse
+            release-name: pegelanalyse-linux
 
           - os: windows-latest
             artifact-name: pegelanalyse-windows
             exe-path: dist/pegelanalyse.exe
+            release-name: pegelanalyse-windows.exe
 
           - os: macos-latest
             artifact-name: pegelanalyse-macos
             exe-path: dist/pegelanalyse
+            release-name: pegelanalyse-macos
 
     runs-on: ${{ matrix.os }}
 
@@ -45,9 +48,33 @@ jobs:
       - name: Build executable
         run: pyinstaller pegelanalyse.spec
 
+      - name: Rename executable for release
+        shell: bash
+        run: mv "${{ matrix.exe-path }}" "dist/${{ matrix.release-name }}"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact-name }}
-          path: ${{ matrix.exe-path }}
+          path: dist/${{ matrix.release-name }}
           if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          merge-multiple: true
+
+      - name: Create GitHub Release and upload binaries
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/pegelanalyse-linux
+            artifacts/pegelanalyse-windows.exe
+            artifacts/pegelanalyse-macos
