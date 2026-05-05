@@ -104,6 +104,10 @@ Fertige Executables für Windows, Linux und macOS stehen unter
 
 - **Konsolenfenster im GUI-Modus (Windows):** Unter Windows öffnet sich beim Start ein Konsolenfenster, auch wenn man direkt in den GUI-Modus startet. Das ist ein bewusster Kompromiss: dasselbe Binary wird sowohl als GUI- als auch als CLI-Werkzeug genutzt, und CLI-Ausgaben (Fortschrittsanzeige beim WAV-Einlesen, Fehlermeldungen) müssen sichtbar sein. Ein reines GUI-Binary würde CLI-Output komplett unterdrücken.
 
+- **Sicherheitswarnung unter macOS:** Beim ersten Start erscheint möglicherweise die Meldung *„Pegelanalyse kann nicht geöffnet werden, weil der Entwickler nicht verifiziert werden kann."* Die App ist nicht mit einem Apple-Entwicklerzertifikat signiert. Umgehung: Rechtsklick auf die Datei → **Öffnen** → im Dialog nochmals **Öffnen** klicken. Dieser Schritt ist nur einmalig nötig.
+
+- **Sicherheitswarnung unter Windows:** Windows SmartScreen kann beim ersten Start eine Warnung anzeigen (*„Windows hat Ihren PC geschützt"*), da das Binary keinen bekannten Herausgeber hat. Klick auf **Weitere Informationen** → **Trotzdem ausführen** umgeht die Warnung.
+
 ### Aus dem Quellcode
 
 Python 3.11 oder neuer wird benötigt.
