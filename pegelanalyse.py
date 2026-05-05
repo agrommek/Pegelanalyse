@@ -435,15 +435,22 @@ def create_plot(
     save_svg:        bool = False,
     export_basename: str  | None = None,
 ) -> None:
-    """Serialise plot data to a temp file and spawn a detached subprocess.
+    """Display the plot in a detached child process; return immediately.
 
-    The subprocess displays the matplotlib window and exits when the user
-    closes it.  The parent process returns immediately — subprocess.Popen
-    registers no atexit join() handlers, unlike multiprocessing.Process.
+    Strategy depends on platform and whether the app is frozen by PyInstaller:
 
-    Platform detachment:
-      Windows  – CREATE_NEW_PROCESS_GROUP  (Ctrl-C does not propagate)
-      POSIX    – start_new_session=True     (new session, no controlling tty)
+    Linux/macOS frozen (--onefile): use os.fork().
+      Re-spawning the same frozen binary would cause the bootloader to
+      re-extract the bundle into a fresh temp dir; that extraction races with
+      the parent's cleanup and fails reliably.  fork() is simpler: the child
+      inherits all already-loaded modules and library mappings, so no
+      re-extraction is needed.  os.setsid() detaches the child from the
+      parent's session so it outlives the parent.
+
+    Windows frozen and non-frozen (all platforms): serialise plot data to a
+      temp file and spawn a fresh subprocess.  On Windows the PyInstaller temp
+      dir is not deleted while the parent is still running, so the child can
+      import freely.  In development mode there is no PyInstaller at all.
     """
     data = dict(
         leq_csv=leq_csv,
@@ -453,13 +460,23 @@ def create_plot(
         save_svg=save_svg,
         export_basename=export_basename,
     )
+
+    # --- fork path: Linux / macOS frozen ---
+    if getattr(sys, 'frozen', False) and hasattr(os, 'fork'):
+        sys.stdout.flush()
+        sys.stderr.flush()
+        pid = os.fork()
+        if pid == 0:
+            os.setsid()
+            _plot_worker(**data)
+            os._exit(0)
+        return
+
+    # --- subprocess path: non-frozen (dev) and frozen Windows ---
     with tempfile.NamedTemporaryFile(suffix='.pkl', delete=False, mode='wb') as f:
         pickle.dump(data, f)
         tmp_path = f.name
 
-    # When frozen by PyInstaller, sys.executable IS the app bundle —
-    # passing the extracted script path as a positional argument would
-    # confuse argparse.  In script mode the interpreter needs the path.
     if getattr(sys, 'frozen', False):
         cmd = [sys.executable, '--_plot-data', tmp_path]
     else:

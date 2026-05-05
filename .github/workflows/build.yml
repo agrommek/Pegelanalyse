@@ -1,0 +1,53 @@
+name: Build Standalone Executables
+
+# Triggers:
+#   - Every push to main (quick feedback during development)
+#   - Every version tag (v1.0, v1.2.3, …) → creates downloadable release artifacts
+#   - Manual trigger via GitHub UI (Actions → Run workflow)
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false   # build all platforms even if one fails
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact-name: pegelanalyse-linux
+            exe-path: dist/pegelanalyse
+
+          - os: windows-latest
+            artifact-name: pegelanalyse-windows
+            exe-path: dist/pegelanalyse.exe
+
+          - os: macos-latest
+            artifact-name: pegelanalyse-macos
+            exe-path: dist/pegelanalyse
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Build executable
+        run: pyinstaller pegelanalyse.spec
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.exe-path }}
+          if-no-files-found: error

@@ -1,0 +1,27 @@
+# Claude Code project files (instructions, plan, local settings)
+.claude/
+
+# PyInstaller build artefacts
+build/
+dist/
+*.spec.bak
+
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Temporary plot data (created by create_plot subprocess)
+*.pkl
+
+# Measurement data (WAV files are multiple GB; GitHub rejects files > 100 MB)
+*.wav
+*.txt
+*.csv
+
+# Editor / OS
+.DS_Store
+Thumbs.db
