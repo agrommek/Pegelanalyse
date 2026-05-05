@@ -17,10 +17,8 @@ __pycache__/
 # Temporary plot data (created by create_plot subprocess)
 *.pkl
 
-# Measurement data (WAV files are multiple GB; GitHub rejects files > 100 MB)
-*.wav
-*.txt
-*.csv
+# Measurement data (large files, not for version control)
+Messdaten/
 
 # Editor / OS
 .DS_Store
